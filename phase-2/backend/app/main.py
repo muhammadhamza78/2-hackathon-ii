@@ -11,6 +11,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1 import auth, tasks
 from app.db.session import init_db
 from app.config import settings
+from app.config import settings
+from fastapi.middleware.cors import CORSMiddleware
 
 # Determine if running in development
 IS_DEV = settings.DEBUG
@@ -26,8 +28,7 @@ app = FastAPI(
 
 
 
-
-allowed_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
+allowed_origins = settings.CORS_ORIGINS
 
 app.add_middleware(
     CORSMiddleware,
@@ -36,7 +37,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(tasks.router, prefix="/api/tasks", tags=["Tasks"])
