@@ -1,75 +1,110 @@
-/**
- * Better Auth Configuration
- * Connects to FastAPI backend with JWT authentication
- */
-import { betterAuth } from "better-auth";
-import { nextCookies } from "better-auth/next-js";
-
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-// Define types for authentication data
-interface SignUpData {
+export interface User {
+  id: number;
   email: string;
-  password: string;
-  name?: string;
 }
 
-interface SignInData {
+export interface LoginResponse {
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+}
+
+export interface RegisterData {
   email: string;
   password: string;
 }
 
-export const auth = betterAuth({
-  // Email/password authentication via FastAPI
-  emailAndPassword: {
-    enabled: true,
-    async signUp(data: SignUpData) {
-      const res = await fetch(`${API_URL}/api/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.detail || "Registration failed");
-      }
-      const user = await res.json();
-      return {
-        id: user.id.toString(),
-        email: user.email,
-        name: user.email.split("@")[0],
-        emailVerified: false,
-      };
+export interface LoginData {
+  email: string;
+  password: string;
+}
+
+/**
+ * Register a new user
+ */
+export async function register(data: RegisterData): Promise<User> {
+  const response = await fetch(`${API_URL}/api/auth/register`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
     },
-    async signIn(data: SignInData) {
-      const res = await fetch(`${API_URL}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.detail || "Login failed");
-      }
-      const token = await res.json();
-      return {
-        user: {
-          id: "jwt",
-          email: data.email,
-          name: data.email.split("@")[0],
-          emailVerified: false,
-        },
-        session: {
-          token: token.access_token,
-          expiresAt: new Date(Date.now() + token.expires_in * 1000),
-        },
-      };
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || "Registration failed");
+  }
+
+  return response.json();
+}
+
+/**
+ * Login user
+ */
+export async function login(data: LoginData): Promise<LoginResponse> {
+  const response = await fetch(`${API_URL}/api/auth/login`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
     },
-  },
-  plugins: [nextCookies()],
-  // REQUIRED in production (Vercel)
-  trustHost: true,
-  // REQUIRED secret (you already fixed this)
-  secret: process.env.BETTER_AUTH_SECRET!,
-  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
-});
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || "Login failed");
+  }
+
+  const tokenData = await response.json();
+  
+  // Store token in localStorage
+  if (typeof window !== "undefined") {
+    localStorage.setItem("access_token", tokenData.access_token);
+    localStorage.setItem("token_type", tokenData.token_type);
+  }
+
+  return tokenData;
+}
+
+/**
+ * Logout user
+ */
+export function logout(): void {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("token_type");
+  }
+}
+
+/**
+ * Get stored access token
+ */
+export function getAccessToken(): string | null {
+  if (typeof window !== "undefined") {
+    return localStorage.getItem("access_token");
+  }
+  return null;
+}
+
+/**
+ * Check if user is authenticated
+ */
+export function isAuthenticated(): boolean {
+  return getAccessToken() !== null;
+}
+
+/**
+ * Get authorization header
+ */
+export function getAuthHeader(): Record<string, string> {
+  const token = getAccessToken();
+  if (token) {
+    return {
+      Authorization: `Bearer ${token}`,
+    };
+  }
+  return {};
+}
