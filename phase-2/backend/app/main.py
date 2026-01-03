@@ -24,26 +24,20 @@ app = FastAPI(
     redoc_url="/redoc" if IS_DEV else None
 )
 
-# --------------------------
-# CORS Configuration
-# --------------------------
-# Read allowed origins from environment variable
-# Format: CORS_ORIGINS=https://frontend1.app,https://frontend2.app
-allowed_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
-allowed_origins = [origin.strip() for origin in allowed_origins.split(",") if origin.strip()]
 
-# Apply CORS middleware
+
+
+allowed_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
+    allow_origins=[origin.strip() for origin in allowed_origins],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# --------------------------
-# Include API Routers
-# --------------------------
+
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(tasks.router, prefix="/api/tasks", tags=["Tasks"])
 
