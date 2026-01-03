@@ -22,22 +22,25 @@ app = FastAPI(
 )
 
 
-# List of frontend domains allowed to access backend
+
+from fastapi.middleware.cors import CORSMiddleware
+
 allowed_origins = [
-    "http://localhost:3000",  # Local development
+    "http://localhost:3000",  # Local dev
     "http://127.0.0.1:3000",
     "https://2-hackathon-ii.vercel.app",  # Production frontend
-    "https://2-hackathon-ii-vercel-app-preview.up.railway.app"  # Optional: preview deployments
 ]
 
-# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_credentials=True,  # Allow cookies or Authorization headers
-    allow_methods=["*"],     # Allow all HTTP methods: GET, POST, PUT, DELETE, OPTIONS
-    allow_headers=["*"],     # Allow all headers
+    allow_credentials=True,
+    allow_methods=["*"],   # Allow all methods: GET, POST, PUT, DELETE, OPTIONS
+    allow_headers=["*"],   # Allow all headers, including Authorization
 )
+
+
+
 
 
 
