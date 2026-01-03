@@ -1,11 +1,9 @@
 """
 Application Configuration
 Loads environment variables and provides configuration settings.
-
-Spec Reference: specs/features/authentication.md (Configuration section)
 """
 
-from pydantic_settings import BaseSettings, Field
+from pydantic import BaseSettings, Field
 from functools import lru_cache
 from typing import List
 
@@ -20,10 +18,10 @@ class Settings(BaseSettings):
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRY_HOURS: int = 24
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30  # Add this
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
     # CORS Configuration
-    CORS_ORIGINS: List[str] = Field(default_factory=list)  # Add this
+    CORS_ORIGINS: List[str] = Field(default_factory=list)
 
     # Application Configuration
     ENV: str = "development"
@@ -36,17 +34,8 @@ class Settings(BaseSettings):
 
 @lru_cache()
 def get_settings() -> Settings:
-    """
-    Get cached settings instance.
-
-    Uses lru_cache to create a singleton instance.
-    This ensures environment variables are read only once.
-
-    Returns:
-        Settings: Application settings
-    """
+    """Cached singleton settings instance"""
     return Settings()
 
 
-# Export settings instance for easy import
 settings = get_settings()
