@@ -2,31 +2,38 @@
  * Better Auth Configuration
  * Connects to FastAPI backend with JWT authentication
  */
-
 import { betterAuth } from "better-auth";
 import { nextCookies } from "better-auth/next-js";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+// Define types for authentication data
+interface SignUpData {
+  email: string;
+  password: string;
+  name?: string;
+}
+
+interface SignInData {
+  email: string;
+  password: string;
+}
+
 export const auth = betterAuth({
   // Email/password authentication via FastAPI
   emailAndPassword: {
     enabled: true,
-
-    async signUp(data) {
+    async signUp(data: SignUpData) {
       const res = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-
       if (!res.ok) {
         const error = await res.json();
         throw new Error(error.detail || "Registration failed");
       }
-
       const user = await res.json();
-
       return {
         id: user.id.toString(),
         email: user.email,
@@ -34,21 +41,17 @@ export const auth = betterAuth({
         emailVerified: false,
       };
     },
-
-    async signIn(data) {
+    async signIn(data: SignInData) {
       const res = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-
       if (!res.ok) {
         const error = await res.json();
         throw new Error(error.detail || "Login failed");
       }
-
       const token = await res.json();
-
       return {
         user: {
           id: "jwt",
@@ -63,14 +66,10 @@ export const auth = betterAuth({
       };
     },
   },
-
   plugins: [nextCookies()],
-
   // REQUIRED in production (Vercel)
   trustHost: true,
-
   // REQUIRED secret (you already fixed this)
   secret: process.env.BETTER_AUTH_SECRET!,
-
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
 });
