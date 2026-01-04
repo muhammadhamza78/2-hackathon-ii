@@ -30,10 +30,9 @@ app = FastAPI(
 # --------------------------
 # CORS Middleware
 # --------------------------
+# Railway/Vercel provides env vars as STRING
 if isinstance(settings.CORS_ORIGINS, str):
-    allowed_origins = [
-        origin.strip() for origin in settings.CORS_ORIGINS.split(",") if origin.strip()
-    ]
+    allowed_origins = [origin.strip() for origin in settings.CORS_ORIGINS.split(",") if origin.strip()]
 else:
     allowed_origins = settings.CORS_ORIGINS
 
@@ -46,7 +45,7 @@ app.add_middleware(
 )
 
 # --------------------------
-# Routers (Prefix here)
+# Routers
 # --------------------------
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(tasks.router, prefix="/api/tasks", tags=["Tasks"])
@@ -57,10 +56,11 @@ app.include_router(tasks.router, prefix="/api/tasks", tags=["Tasks"])
 @app.on_event("startup")
 async def startup_event():
     if IS_DEV:
+        # Initialize DB in dev only (use Alembic in prod)
         init_db()
 
 # --------------------------
-# Root
+# Root Endpoint
 # --------------------------
 @app.get("/", tags=["Root"])
 async def root():
@@ -71,6 +71,7 @@ async def root():
         "endpoints": {
             "register": "POST /api/auth/register",
             "login": "POST /api/auth/login",
+            "tasks": "GET/POST /api/tasks"
         },
     }
 
@@ -94,10 +95,9 @@ async def health_check():
 # --------------------------
 if __name__ == "__main__":
     import uvicorn
-
     uvicorn.run(
         "app.main:app",
         host="0.0.0.0",
         port=int(os.getenv("PORT", 8000)),
-        reload=IS_DEV,
+        reload=IS_DEV
     )
