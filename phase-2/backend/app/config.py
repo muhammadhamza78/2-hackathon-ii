@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     DEBUG: bool = True
 
     # CORS Configuration
-    CORS_ORIGINS: str = "http://localhost:3000,https://2-hackathon-ii.vercel.app"
+    CORS_ORIGINS: str = "https://2-hackathon-ii.vercel.app,https://2-hackathon-ii-git-main.vercel.app"
 
     class Config:
         env_file = ".env"
