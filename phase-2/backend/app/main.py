@@ -28,14 +28,11 @@ app = FastAPI(
 )
 
 # --------------------------
-# CORS Middleware (FIXED)
+# CORS Middleware
 # --------------------------
-# Railway provides env vars as STRING
 if isinstance(settings.CORS_ORIGINS, str):
     allowed_origins = [
-        origin.strip()
-        for origin in settings.CORS_ORIGINS.split(",")
-        if origin.strip()
+        origin.strip() for origin in settings.CORS_ORIGINS.split(",") if origin.strip()
     ]
 else:
     allowed_origins = settings.CORS_ORIGINS
@@ -44,12 +41,12 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],   # includes OPTIONS
-    allow_headers=["*"],   # Authorization, Content-Type
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # --------------------------
-# Routers
+# Routers (Prefix here)
 # --------------------------
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(tasks.router, prefix="/api/tasks", tags=["Tasks"])
