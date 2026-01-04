@@ -21,7 +21,13 @@ app = FastAPI(
 
 
 # Configure CORS
-allowed_origins = [origin.strip() for origin in settings.CORS_ORIGINS.split(",")]
+# Add local and deployed frontend URLs here
+allowed_origins = [
+    "http://localhost:3000",  # Local Next.js dev
+    "https://2-hackathon-ii.vercel.app",  # Deployed frontend
+    # If you have preview deployments in Vercel:
+    "https://2-hackathon-ii-*.vercel.app",
+]
 
 app.add_middleware(
     CORSMiddleware,
