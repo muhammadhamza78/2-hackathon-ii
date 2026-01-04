@@ -1,46 +1,30 @@
-"""
-Application Configuration
-Loads environment variables and provides configuration settings.
-"""
-
-from functools import lru_cache
-from typing import List
-
 from pydantic_settings import BaseSettings
-from pydantic import Field
+from functools import lru_cache
 
 
 class Settings(BaseSettings):
-    # ------------------
     # Database
-    # ------------------
     DATABASE_URL: str
 
-    # ------------------
     # JWT
-    # ------------------
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str = "HS256"
-    JWT_EXPIRY_HOURS: int = 24
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30   # ✅ ADD THIS
 
-    # ------------------
     # App
-    # ------------------
     ENV: str = "development"
     DEBUG: bool = True
 
-    # ------------------
     # CORS
-    # ------------------
-    CORS_ORIGINS: str = Field(default="")
+    CORS_ORIGINS: str = ""
 
     class Config:
         env_file = ".env"
         case_sensitive = True
 
 
-@lru_cache
-def get_settings() -> Settings:
+@lru_cache()
+def get_settings():
     return Settings()
 
 
