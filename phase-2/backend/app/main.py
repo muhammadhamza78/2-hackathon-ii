@@ -1,43 +1,56 @@
 """
 FastAPI Application Entry Point
 Main application configuration and startup.
-
-Spec Reference: specs/architecture.md (Backend section)
 """
 
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 from app.api.v1 import auth, tasks
 from app.db.session import init_db
 from app.config import settings
-from app.config import settings
-from fastapi.middleware.cors import CORSMiddleware
 
-# Determine if running in development
+# --------------------------
+# Environment
+# --------------------------
 IS_DEV = settings.DEBUG
 
-# Create FastAPI app
+# --------------------------
+# App Init
+# --------------------------
 app = FastAPI(
     title="Task Management API",
     description="Backend API for Task Management System with JWT Authentication",
     version="1.0.0",
-    docs_url="/docs" if IS_DEV else None,   # Only enable Swagger in dev
-    redoc_url="/redoc" if IS_DEV else None
+    docs_url="/docs" if IS_DEV else None,
+    redoc_url="/redoc" if IS_DEV else None,
 )
 
-
-
-allowed_origins = settings.CORS_ORIGINS
+# --------------------------
+# CORS Middleware (FIXED)
+# --------------------------
+# Railway provides env vars as STRING
+if isinstance(settings.CORS_ORIGINS, str):
+    allowed_origins = [
+        origin.strip()
+        for origin in settings.CORS_ORIGINS.split(",")
+        if origin.strip()
+    ]
+else:
+    allowed_origins = settings.CORS_ORIGINS
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[origin.strip() for origin in allowed_origins],
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],   # includes OPTIONS
+    allow_headers=["*"],   # Authorization, Content-Type
 )
 
+# --------------------------
+# Routers
+# --------------------------
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(tasks.router, prefix="/api/tasks", tags=["Tasks"])
 
@@ -46,15 +59,11 @@ app.include_router(tasks.router, prefix="/api/tasks", tags=["Tasks"])
 # --------------------------
 @app.on_event("startup")
 async def startup_event():
-    """
-    Initialize database tables (development only).
-    In production, use Alembic migrations instead.
-    """
     if IS_DEV:
         init_db()
 
 # --------------------------
-# Root Endpoint
+# Root
 # --------------------------
 @app.get("/", tags=["Root"])
 async def root():
@@ -64,8 +73,8 @@ async def root():
         "docs": "/docs" if IS_DEV else None,
         "endpoints": {
             "register": "POST /api/auth/register",
-            "login": "POST /api/auth/login"
-        }
+            "login": "POST /api/auth/login",
+        },
     }
 
 # --------------------------
@@ -84,13 +93,14 @@ async def health_check():
         return {"status": "degraded", "database": "disconnected"}
 
 # --------------------------
-# Run Uvicorn
+# Local Run
 # --------------------------
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(
         "app.main:app",
         host="0.0.0.0",
         port=int(os.getenv("PORT", 8000)),
-        reload=IS_DEV
+        reload=IS_DEV,
     )
