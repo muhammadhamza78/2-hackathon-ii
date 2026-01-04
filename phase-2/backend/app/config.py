@@ -1,8 +1,6 @@
 """
 Application Configuration
 Loads environment variables and provides configuration settings.
-
-Spec Reference: specs/features/authentication.md (Configuration section)
 """
 
 from pydantic_settings import BaseSettings
@@ -24,6 +22,9 @@ class Settings(BaseSettings):
     ENV: str = "development"
     DEBUG: bool = True
 
+    # CORS Configuration
+    CORS_ORIGINS: str = "http://localhost:3000,https://2-hackathon-ii.vercel.app"
+
     class Config:
         env_file = ".env"
         case_sensitive = True
@@ -31,17 +32,9 @@ class Settings(BaseSettings):
 
 @lru_cache()
 def get_settings() -> Settings:
-    """
-    Get cached settings instance.
-
-    Uses lru_cache to create a singleton instance.
-    This ensures environment variables are read only once.
-
-    Returns:
-        Settings: Application settings
-    """
+    """Get cached settings instance."""
     return Settings()
 
 
-# Export settings instance for easy import
+# Export singleton settings instance
 settings = get_settings()
