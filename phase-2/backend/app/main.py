@@ -1,8 +1,6 @@
 """
 FastAPI Application Entry Point
 Main application configuration and startup.
-
-Spec Reference: specs/architecture.md (Backend section)
 """
 
 from fastapi import FastAPI
@@ -17,21 +15,13 @@ app = FastAPI(
     title="Task Management API",
     description="Backend API for Task Management System with JWT Authentication",
     version="1.0.0",
-    docs_url="/docs",  # Swagger UI
-    redoc_url="/redoc"  # ReDoc
+    docs_url="/docs",
+    redoc_url="/redoc"
 )
 
 
-# Configure CORS for frontend access
-# Allow Next.js frontend to access API
-# Update allowed_origins after deploying frontend to Vercel
-allowed_origins = [
-    "http://localhost:3000",  # Local development
-    "http://127.0.0.1:3000",
-    # Add your Vercel deployment URLs here after deployment:
-    # "https://your-app.vercel.app",
-    # "https://your-app-*.vercel.app",  # Preview deployments
-]
+# Configure CORS
+allowed_origins = [origin.strip() for origin in settings.CORS_ORIGINS.split(",")]
 
 app.add_middleware(
     CORSMiddleware,
@@ -42,31 +32,23 @@ app.add_middleware(
 )
 
 
-# Include routers
-app.include_router(auth.router)
+# Include API routers
+app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(tasks.router, prefix="/api/tasks", tags=["Tasks"])
 
 
 @app.on_event("startup")
 async def startup_event():
     """
-    Application startup event.
-
-    Initialize database tables (development only).
-    In production, use Alembic migrations instead.
+    Initialize database tables on startup (development only).
+    Use migrations (Alembic) for production.
     """
     if settings.DEBUG:
-        # Only auto-create tables in development
         init_db()
 
 
 @app.get("/", tags=["Root"])
 async def root():
-    """
-    Root endpoint.
-
-    Returns API information and available endpoints.
-    """
     return {
         "message": "Task Management API",
         "version": "1.0.0",
@@ -80,36 +62,21 @@ async def root():
 
 @app.get("/health", tags=["Health"])
 async def health_check():
-    """
-    Health check endpoint for monitoring.
-
-    Returns service status and database connectivity.
-    Spec: specs/api/rest-endpoints.md (Health Check Endpoint)
-    """
+    """Health check endpoint."""
     from app.db.session import engine
     from sqlmodel import text
 
     try:
-        # Test database connection
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
-
-        return {
-            "status": "ok",
-            "database": "connected"
-        }
+        return {"status": "ok", "database": "connected"}
     except Exception:
-        return {
-            "status": "degraded",
-            "database": "disconnected"
-        }
+        return {"status": "degraded", "database": "disconnected"}
 
 
 if __name__ == "__main__":
     import uvicorn
 
-    # Run development server
-    # For production, use: uvicorn app.main:app --host 0.0.0.0 --port 8000
     uvicorn.run(
         "app.main:app",
         host="0.0.0.0",
