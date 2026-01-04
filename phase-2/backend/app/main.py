@@ -1,6 +1,6 @@
 """
 FastAPI Application Entry Point
-Main application configuration and startup.
+Main configuration, routers, CORS middleware, and startup events.
 """
 
 import os
@@ -11,14 +11,9 @@ from app.api.v1 import auth, tasks
 from app.db.session import init_db
 from app.config import settings
 
-# --------------------------
-# Environment
-# --------------------------
 IS_DEV = settings.DEBUG
 
-# --------------------------
-# App Init
-# --------------------------
+# Initialize FastAPI app
 app = FastAPI(
     title="Task Management API",
     description="Backend API for Task Management System with JWT Authentication",
@@ -28,13 +23,11 @@ app = FastAPI(
 )
 
 # --------------------------
-# CORS Middleware
+# CORS
 # --------------------------
-# Railway/Vercel provides env vars as STRING
-if isinstance(settings.CORS_ORIGINS, str):
-    allowed_origins = [origin.strip() for origin in settings.CORS_ORIGINS.split(",") if origin.strip()]
-else:
-    allowed_origins = settings.CORS_ORIGINS
+allowed_origins = [
+    origin.strip() for origin in settings.CORS_ORIGINS.split(",") if origin.strip()
+]
 
 app.add_middleware(
     CORSMiddleware,
@@ -56,7 +49,6 @@ app.include_router(tasks.router, prefix="/api/tasks", tags=["Tasks"])
 @app.on_event("startup")
 async def startup_event():
     if IS_DEV:
-        # Initialize DB in dev only (use Alembic in prod)
         init_db()
 
 # --------------------------
@@ -71,7 +63,6 @@ async def root():
         "endpoints": {
             "register": "POST /api/auth/register",
             "login": "POST /api/auth/login",
-            "tasks": "GET/POST /api/tasks"
         },
     }
 
@@ -82,7 +73,6 @@ async def root():
 async def health_check():
     from app.db.session import engine
     from sqlmodel import text
-
     try:
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
@@ -95,9 +85,10 @@ async def health_check():
 # --------------------------
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(
         "app.main:app",
         host="0.0.0.0",
         port=int(os.getenv("PORT", 8000)),
-        reload=IS_DEV
+        reload=IS_DEV,
     )
