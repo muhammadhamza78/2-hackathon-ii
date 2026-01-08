@@ -1,94 +1,75 @@
-"""
-FastAPI Application Entry Point
-Main configuration, routers, CORS middleware, and startup events.
-"""
-
-import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.v1 import auth, tasks
-from app.db.session import init_db
-from app.config import settings
+# Correct imports based on your current structure
+from app.api.v1 import auth, tasks, profile  # directly import auth.py, tasks.py, profile.py
+from app.config import settings  # your settings
 
-IS_DEV = settings.DEBUG
 
-# Initialize FastAPI app
+
+
+# -----------------------------
+# Create FastAPI instance
+# -----------------------------
 app = FastAPI(
     title="Task Management API",
-    description="Backend API for Task Management System with JWT Authentication",
     version="1.0.0",
-    docs_url="/docs" if IS_DEV else None,
-    redoc_url="/redoc" if IS_DEV else None,
+    description="API for managing tasks, users, and profiles."
 )
-
-# --------------------------
-# CORS
-# --------------------------
-allowed_origins = [
-    origin.strip() for origin in settings.CORS_ORIGINS.split(",") if origin.strip()
-]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3001"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# --------------------------
-# Routers
-# --------------------------
+
+# -----------------------------
+# Include Routers
+# -----------------------------
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(tasks.router, prefix="/api/tasks", tags=["Tasks"])
+app.include_router(profile.router, prefix="/api/v1", tags=["Profile"])
 
-# --------------------------
+
+# -----------------------------
 # Startup Event
-# --------------------------
-@app.on_event("startup")
-async def startup_event():
-    if IS_DEV:
-        init_db()
+# -----------------------------
+# @app.on_event("startup")
+# async def startup_event():
+#     if settings.DEBUG:
+#         pass
 
-# --------------------------
-# Root Endpoint
-# --------------------------
-@app.get("/", tags=["Root"])
+# -----------------------------
+# Routes
+# -----------------------------
+@app.get("/")
 async def root():
     return {
         "message": "Task Management API",
         "version": "1.0.0",
-        "docs": "/docs" if IS_DEV else None,
-        "endpoints": {
-            "register": "POST /api/auth/register",
-            "login": "POST /api/auth/login",
-        },
     }
 
-# --------------------------
-# Health Check
-# --------------------------
-@app.get("/health", tags=["Health"])
-async def health_check():
+
+
+
+
+
+@app.get("/health")
+async def health():
     from app.db.session import engine
     from sqlmodel import text
+
     try:
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
-        return {"status": "ok", "database": "connected"}
+        return {"status": "ok"}
     except Exception:
-        return {"status": "degraded", "database": "disconnected"}
-
-# --------------------------
-# Local Run
-# --------------------------
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(
-        "app.main:app",
-        host="0.0.0.0",
-        port=int(os.getenv("PORT", 8000)),
-        reload=IS_DEV,
-    )
+        return {"status": "db_error"}

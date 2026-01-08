@@ -24,6 +24,8 @@ class User(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     email: str = Field(max_length=255, unique=True, index=True, sa_column_kwargs={"nullable": False})
     hashed_password: str = Field(max_length=255, sa_column_kwargs={"nullable": False})
+    name: Optional[str] = Field(default=None, max_length=255, sa_column_kwargs={"nullable": True})
+    profile_picture: Optional[str] = Field(default=None, max_length=500, sa_column_kwargs={"nullable": True})
     created_at: datetime = Field(default_factory=datetime.utcnow, sa_column_kwargs={"nullable": False})
     updated_at: datetime = Field(default_factory=datetime.utcnow, sa_column_kwargs={"nullable": False})
 

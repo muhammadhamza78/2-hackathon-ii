@@ -29,12 +29,19 @@ class UserRegisterRequest(BaseModel):
         description="User password (min 8 chars, max 128 chars)",
         examples=["SecurePass123!"]
     )
+    name: str | None = Field(
+        default=None,
+        max_length=255,
+        description="Display name (optional, defaults to email prefix if not provided)",
+        examples=["John Doe"]
+    )
 
     class Config:
         json_schema_extra = {
             "example": {
                 "email": "user@example.com",
-                "password": "SecurePass123!"
+                "password": "SecurePass123!",
+                "name": "John Doe"
             }
         }
 
@@ -67,11 +74,24 @@ class UserLoginRequest(BaseModel):
         }
 
 
+class UserBasicInfo(BaseModel):
+    """
+    Basic user information included in login response.
+    """
+    id: int
+    email: str
+    name: str | None = None
+    profile_picture: str | None = None
+
+    class Config:
+        from_attributes = True
+
+
 class TokenResponse(BaseModel):
     """
     Response schema for successful login.
 
-    Contains JWT access token and metadata.
+    Contains JWT access token, metadata, and user information.
     Spec: specs/api/rest-endpoints.md (POST /api/auth/login response)
     """
 
@@ -90,13 +110,23 @@ class TokenResponse(BaseModel):
         description="Token expiry time in seconds",
         examples=[86400]
     )
+    user: UserBasicInfo = Field(
+        ...,
+        description="User information"
+    )
 
     class Config:
         json_schema_extra = {
             "example": {
                 "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
                 "token_type": "Bearer",
-                "expires_in": 86400
+                "expires_in": 86400,
+                "user": {
+                    "id": 1,
+                    "email": "user@example.com",
+                    "name": "John Doe",
+                    "profile_picture": None
+                }
             }
         }
 
@@ -119,6 +149,16 @@ class UserResponse(BaseModel):
         description="User email address",
         examples=["user@example.com"]
     )
+    name: str | None = Field(
+        default=None,
+        description="User display name",
+        examples=["John Doe"]
+    )
+    profile_picture: str | None = Field(
+        default=None,
+        description="Profile picture URL (cloud storage)",
+        examples=["https://cdn.example.com/profiles/user123.jpg"]
+    )
     created_at: datetime = Field(
         ...,
         description="Account creation timestamp",
@@ -131,6 +171,38 @@ class UserResponse(BaseModel):
             "example": {
                 "id": 1,
                 "email": "user@example.com",
+                "name": "John Doe",
+                "profile_picture": "https://cdn.example.com/profiles/user123.jpg",
                 "created_at": "2025-12-30T10:00:00Z"
+            }
+        }
+
+
+class ProfileUpdateRequest(BaseModel):
+    """
+    Request schema for updating user profile.
+
+    Endpoint: PUT /api/v1/profile
+    Spec: specs/002-dashboard-ux-enhancements/spec.md (FR-002)
+    """
+
+    name: str | None = Field(
+        default=None,
+        max_length=255,
+        description="User display name",
+        examples=["John Doe"]
+    )
+    profile_picture: str | None = Field(
+        default=None,
+        max_length=500,
+        description="Profile picture URL (cloud storage)",
+        examples=["https://cdn.example.com/profiles/user123.jpg"]
+    )
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "name": "John Doe",
+                "profile_picture": "https://cdn.example.com/profiles/user123.jpg"
             }
         }

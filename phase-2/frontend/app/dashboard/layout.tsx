@@ -1,10 +1,9 @@
 /**
  * Dashboard Layout
- * Protected layout for authenticated users
+ * Protected layout for authenticated users with profile dropdown and theme toggle
  *
  * Spec Reference:
- * - specs/features/authentication.md (UI/UX Requirements - Protected Routes)
- * - specs/ui/components.md (Dashboard Layout)
+ * - specs/002-dashboard-ux-enhancements/spec.md (FR-005, FR-006, FR-007, FR-036)
  */
 
 "use client";
@@ -12,6 +11,10 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { ProfileDropdown } from "@/components/profile/ProfileDropdown";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { getProfile } from "@/lib/profile-api";
+import type { User } from "@/types/auth";
 
 export default function DashboardLayout({
   children,
@@ -20,61 +23,81 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userEmail, setUserEmail] = useState("");
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for JWT token
-    const token = localStorage.getItem("jwt_token");
-    const expiry = localStorage.getItem("token_expiry");
-    const email = localStorage.getItem("user_email");
+    async function checkAuthAndLoadProfile() {
+      // Check for JWT token
+      const token = localStorage.getItem("jwt_token");
+      const expiry = localStorage.getItem("token_expiry");
 
-    if (!token || !expiry) {
-      // No token - redirect to login
-      router.push("/");
-      return;
+      if (!token || !expiry) {
+        // No token - redirect to login
+        router.push("/");
+        return;
+      }
+
+      const expiryTime = parseInt(expiry, 10);
+      if (Date.now() >= expiryTime) {
+        // Token expired - clear and redirect
+        localStorage.removeItem("jwt_token");
+        localStorage.removeItem("token_expiry");
+        localStorage.removeItem("user_email");
+        router.push("/");
+        return;
+      }
+
+      // Token valid - fetch user profile
+      try {
+        const profile = await getProfile();
+        setUser(profile);
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error("Failed to load profile:", error);
+        // Token might be invalid - redirect to login
+        localStorage.removeItem("jwt_token");
+        localStorage.removeItem("token_expiry");
+        localStorage.removeItem("user_email");
+        router.push("/");
+      } finally {
+        setLoading(false);
+      }
     }
 
-    const expiryTime = parseInt(expiry, 10);
-    if (Date.now() >= expiryTime) {
-      // Token expired - clear and redirect
-      localStorage.removeItem("jwt_token");
-      localStorage.removeItem("token_expiry");
-      localStorage.removeItem("user_email");
-      router.push("/");
-      return;
-    }
-
-    // Token valid
-    setIsAuthenticated(true);
-    setUserEmail(email || "");
+    checkAuthAndLoadProfile();
   }, [router]);
 
   const handleLogout = () => {
-    // Clear token from localStorage
+    // Clear all auth data from localStorage
     localStorage.removeItem("jwt_token");
     localStorage.removeItem("token_expiry");
     localStorage.removeItem("user_email");
+    localStorage.removeItem("user_data");
 
     // Redirect to login
-    router.push("/");
+    router.push("/login");
   };
 
-  // Don't render until authentication is verified
-  if (!isAuthenticated) {
+  // Show loading state
+  if (loading || !isAuthenticated) {
     return null;
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#f5f0eb' }}>
+    <div className="min-h-screen transition-colors" style={{ background: 'var(--background)', color: 'var(--foreground)' }}>
       {/* Top Navigation */}
-      <nav className="bg-white shadow-sm">
+      <nav className="shadow-sm border-b transition-colors" style={{
+        background: 'var(--navbar-bg)',
+        borderColor: 'var(--card-border)'
+      }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             {/* Left side - Logo/Title */}
             <div className="flex items-center">
               <Link href="/dashboard" className="flex items-center space-x-1 hover:opacity-80 transition-opacity">
                 <h1 className="text-4xl font-bold tracking-tight">
-                  <span className="text-gray-600">TO</span>
+                  <span style={{ color: 'var(--navbar-text)', opacity: 0.6 }}>TO</span>
                   <span className="text-[#e08b3d]">DO</span>
                   <span className="inline-flex items-center justify-center w-10 h-10 ml-1 rounded-full bg-[#e08b3d] text-white">
                     <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -85,17 +108,10 @@ export default function DashboardLayout({
               </Link>
             </div>
 
-            {/* Right side - User menu */}
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">
-                {userEmail}
-              </span>
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 text-sm font-medium rounded-lg text-white bg-[#e08b3d] hover:bg-[#d17a2f] transition-colors"
-              >
-                Logout
-              </button>
+            {/* Right side - Theme toggle and Profile */}
+            <div className="flex items-center space-x-3">
+              <ThemeToggle />
+              <ProfileDropdown user={user} onLogout={handleLogout} />
             </div>
           </div>
         </div>

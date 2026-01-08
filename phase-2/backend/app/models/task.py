@@ -46,6 +46,7 @@ class Task(SQLModel, table=True):
     description: Optional[str] = Field(default=None, max_length=2000)
     status: TaskStatus = Field(default=TaskStatus.PENDING)
     user_id: int = Field(foreign_key="users.id", index=True)
+    deleted_at: Optional[datetime] = Field(default=None, sa_column_kwargs={"nullable": True})
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 

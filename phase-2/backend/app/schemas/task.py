@@ -68,6 +68,7 @@ class TaskResponse(BaseModel):
     description: Optional[str]
     status: TaskStatus
     user_id: int
+    deleted_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
 
@@ -80,6 +81,7 @@ class TaskResponse(BaseModel):
                 "description": "Milk, eggs, bread",
                 "status": "pending",
                 "user_id": 456,
+                "deleted_at": None,
                 "created_at": "2025-12-30T10:00:00Z",
                 "updated_at": "2025-12-30T10:00:00Z"
             }

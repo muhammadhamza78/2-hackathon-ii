@@ -1,90 +1,133 @@
-/**
- * API Client Utility
- * Handles authenticated requests to FastAPI backend
- *
- * Works with Railway backend & CORS-enabled frontend.
- */
+// lib/api.ts
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+// ---------------- GET ----------------
+export async function apiGet(url: string, requiresAuth: boolean = true): Promise<Response> {
+  const headers: HeadersInit = {};
 
-export interface ApiRequestOptions extends RequestInit {
-  requiresAuth?: boolean;
+  if (requiresAuth && typeof window !== "undefined") {
+    const token = localStorage.getItem("jwt_token");
+    if (token) headers.Authorization = `Bearer ${token}`;
+  }
+
+  return fetch(`${API_BASE}${url}`, {
+    method: "GET",
+    headers,
+  });
 }
 
-export async function apiRequest(
-  endpoint: string,
-  options: ApiRequestOptions = {}
-): Promise<Response> {
-  const { requiresAuth = true, headers = {}, ...fetchOptions } = options;
-
-  const requestHeaders: Record<string, string> = {
+// ---------------- POST ----------------
+export async function apiPost(url: string, body?: any, requiresAuth: boolean = true): Promise<Response> {
+  const headers: HeadersInit = {
     "Content-Type": "application/json",
-    ...(headers as Record<string, string>),
   };
 
   if (requiresAuth && typeof window !== "undefined") {
     const token = localStorage.getItem("jwt_token");
-    const expiry = localStorage.getItem("token_expiry");
-
-    if (token && expiry) {
-      const expiryTime = parseInt(expiry, 10);
-      if (Date.now() < expiryTime) {
-        requestHeaders["Authorization"] = `Bearer ${token}`;
-      } else {
-        localStorage.removeItem("jwt_token");
-        localStorage.removeItem("token_expiry");
-        window.location.href = "/login";
-        throw new Error("Token expired");
-      }
-    } else if (requiresAuth) {
-      window.location.href = "/login";
-      throw new Error("Authentication required");
-    }
+    if (token) headers.Authorization = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_URL}${endpoint}`, {
-    ...fetchOptions,
-    headers: requestHeaders,
-  });
-
-  if (response.status === 401 && typeof window !== "undefined") {
-    localStorage.removeItem("jwt_token");
-    localStorage.removeItem("token_expiry");
-    window.location.href = "/login";
-    throw new Error("Unauthorized");
-  }
-
-  return response;
-}
-
-export async function apiGet(endpoint: string, requiresAuth = true): Promise<Response> {
-  return apiRequest(endpoint, { method: "GET", requiresAuth });
-}
-
-export async function apiPost(
-  endpoint: string,
-  body?: any,
-  requiresAuth = true
-): Promise<Response> {
-  return apiRequest(endpoint, {
+  return fetch(`${API_BASE}${url}`, {
     method: "POST",
-    body: body ? JSON.stringify(body) : undefined,
-    requiresAuth,
+    headers,
+    body: JSON.stringify(body || {}),
   });
 }
 
-export async function apiPut(
-  endpoint: string,
-  body?: any,
-  requiresAuth = true
-): Promise<Response> {
-  return apiRequest(endpoint, {
+// ---------------- PUT ----------------
+export async function apiPut(url: string, body?: any, requiresAuth: boolean = true): Promise<Response> {
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+  };
+
+  if (requiresAuth && typeof window !== "undefined") {
+    const token = localStorage.getItem("jwt_token");
+    if (token) headers.Authorization = `Bearer ${token}`;
+  }
+
+  return fetch(`${API_BASE}${url}`, {
     method: "PUT",
-    body: body ? JSON.stringify(body) : undefined,
-    requiresAuth,
+    headers,
+    body: JSON.stringify(body || {}),
   });
 }
 
-export async function apiDelete(endpoint: string, requiresAuth = true): Promise<Response> {
-  return apiRequest(endpoint, { method: "DELETE", requiresAuth });
+// ---------------- DELETE ----------------
+export async function apiDelete(url: string, requiresAuth: boolean = true): Promise<Response> {
+  const headers: HeadersInit = {};
+
+  if (requiresAuth && typeof window !== "undefined") {
+    const token = localStorage.getItem("jwt_token");
+    if (token) headers.Authorization = `Bearer ${token}`;
+  }
+
+  return fetch(`${API_BASE}${url}`, {
+    method: "DELETE",
+    headers,
+  });
+}
+
+// ---------------- Login ----------------
+export interface LoginResponse {
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    profile_picture: string | null;
+  };
+}
+
+export async function loginUser(email: string, password: string): Promise<LoginResponse> {
+  const res = await apiPost("/api/auth/login", { email, password }, false);
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.detail || "Login failed");
+  }
+
+  const data: LoginResponse = await res.json();
+
+  localStorage.setItem("jwt_token", data.access_token);
+  localStorage.setItem("token_expiry", (Date.now() + data.expires_in * 1000).toString());
+
+  return {
+    ...data,
+    user: {
+      ...data.user,
+      name: data.user.name || "",
+      profile_picture: data.user.profile_picture || null,
+    },
+  };
+}
+
+// ---------------- Task History ----------------
+export async function getTaskHistory() {
+  const res = await apiGet("/api/tasks/history", true);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.detail || "Failed to fetch task history");
+  }
+  return res.json();
+}
+
+export async function restoreTask(taskId: number) {
+  const res = await apiPost(`/api/tasks/${taskId}/restore`, {}, true);
+  if (!res.ok) throw new Error("Failed to restore task");
+  return res.json();
+}
+
+export async function clearTaskHistory() {
+  const res = await apiDelete("/api/tasks/history", true);
+  if (!res.ok) throw new Error("Failed to clear task history");
+  return true;
+}
+
+// ---------------- Clear Completed Tasks ----------------
+export async function clearCompletedTasks() {
+  const res = await apiPost("/api/tasks/clear-completed", {}, true);
+  if (!res.ok) throw new Error("Failed to clear completed tasks");
+  return true;
 }

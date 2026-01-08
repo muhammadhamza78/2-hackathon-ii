@@ -20,6 +20,7 @@ export default function RegisterPage() {
     email: "",
     password: "",
   });
+  const [name, setName] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -53,7 +54,10 @@ export default function RegisterPage() {
       const response = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          name: name.trim() || null,
+        }),
       });
 
       if (!response.ok) {
@@ -102,6 +106,28 @@ export default function RegisterPage() {
           )}
 
           <div className="space-y-4">
+            {/* Name Input (Optional) */}
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                Name (Optional)
+              </label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                autoComplete="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#e08b3d]"
+                style={{ background: '#e8e2dc' }}
+                placeholder="Your name"
+                maxLength={255}
+              />
+              <p className="mt-2 text-xs text-gray-500">
+                Leave empty to use email prefix as your display name
+              </p>
+            </div>
+
             {/* Email Input */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">

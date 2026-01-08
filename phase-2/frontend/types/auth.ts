@@ -40,5 +40,12 @@ export interface ValidationError {
 export interface User {
   id: number;
   email: string;
+  name: string | null;
+  profile_picture: string | null;
   created_at: string;
+}
+
+export interface ProfileUpdateRequest {
+  name?: string | null;
+  profile_picture?: string | null;
 }

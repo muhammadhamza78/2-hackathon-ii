@@ -57,10 +57,20 @@ function LoginForm() {
 
       const data = await response.json();
 
-      // Store JWT token
+      // Store JWT token and expiry
       localStorage.setItem("jwt_token", data.access_token);
       localStorage.setItem("token_expiry", (Date.now() + data.expires_in * 1000).toString());
       localStorage.setItem("user_email", formData.email);
+
+      // Store user data from response
+      if (data.user) {
+        localStorage.setItem("user_data", JSON.stringify({
+          id: data.user.id,
+          email: data.user.email,
+          name: data.user.name,
+          profile_picture: data.user.profile_picture
+        }));
+      }
 
       // Redirect to dashboard
       router.push("/dashboard");

@@ -1,11 +1,26 @@
-/**
- * Better Auth API Route Handler
- * Handles authentication requests and proxies to FastAPI backend
- *
- * Spec Reference: specs/features/authentication.md
- */
+// // backend/app/api/auth/route.ts
+// import { auth } from "@/lib/auth";
 
-import { auth } from "@/lib/auth";
-import { toNextJsHandler } from "better-auth/next-js";
+// // POST /api/auth → login
+// export async function POST(req: Request) {
+//   try {
+//     const { email, password } = await req.json();
+//     const data = await auth.login({ email, password });
+//     return new Response(JSON.stringify(data), { status: 200 });
+//   } catch (err: any) {
+//     return new Response(JSON.stringify({ detail: err.message || "Login failed" }), { status: 401 });
+//   }
+// }
 
-export const { GET, POST } = toNextJsHandler(auth);
+// // GET /api/auth → check session
+// export async function GET(req: Request) {
+//   try {
+//     const token = req.headers.get("Authorization")?.replace("Bearer ", "");
+//     if (!token) return new Response(JSON.stringify({ user: null }), { status: 200 });
+
+//     const user = await auth.session({ token });
+//     return new Response(JSON.stringify({ user }), { status: 200 });
+//   } catch {
+//     return new Response(JSON.stringify({ user: null }), { status: 200 });
+//   }
+// }

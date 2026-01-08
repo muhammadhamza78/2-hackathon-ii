@@ -31,9 +31,16 @@ export interface Task {
   description: string | null;
   status: TaskStatus;
   user_id: number;
+  deleted_at: string | null; // ISO 8601 datetime string - null for active tasks
   created_at: string; // ISO 8601 datetime string
   updated_at: string; // ISO 8601 datetime string
 }
+
+/**
+ * Filter and sort options for task list
+ */
+export type TaskFilterStatus = "pending" | "in_progress" | "completed" | null;
+export type TaskSortOrder = "asc" | "desc";
 
 /**
  * Request payload for creating a new task.
