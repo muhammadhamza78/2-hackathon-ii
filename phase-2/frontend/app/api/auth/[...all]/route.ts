@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // // backend/app/api/auth/route.ts
 // import { auth } from "@/lib/auth";
 
@@ -11,6 +12,10 @@
 //     return new Response(JSON.stringify({ detail: err.message || "Login failed" }), { status: 401 });
 //   }
 // }
+=======
+import { auth } from "@/lib/auth";
+import { toNextJsHandler } from "better-auth/next-js";
+>>>>>>> 09fec55ab4658b42257e6db6376aa6c6353809ac
 
 // // GET /api/auth → check session
 // export async function GET(req: Request) {
