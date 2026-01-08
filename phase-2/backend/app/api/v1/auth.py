@@ -47,7 +47,6 @@ async def register(
 
     hashed_password = hash_password(request.password)
 
-<<<<<<< HEAD
     # Generate default name from email if not provided
     display_name = request.name
     if not display_name or display_name.strip() == "":
@@ -58,11 +57,6 @@ async def register(
         email=email,
         hashed_password=hashed_password,
         name=display_name,
-=======
-    user = User(
-        email=email,
-        hashed_password=hashed_password,
->>>>>>> 09fec55ab4658b42257e6db6376aa6c6353809ac
     )
 
     session.add(user)
@@ -72,11 +66,8 @@ async def register(
     return UserResponse(
         id=user.id,
         email=user.email,
-<<<<<<< HEAD
         name=user.name,
         profile_picture=user.profile_picture,
-=======
->>>>>>> 09fec55ab4658b42257e6db6376aa6c6353809ac
         created_at=user.created_at,
     )
 
@@ -107,22 +98,16 @@ async def login(
         email=user.email,
     )
 
-<<<<<<< HEAD
     from app.schemas.auth import UserBasicInfo
 
-=======
->>>>>>> 09fec55ab4658b42257e6db6376aa6c6353809ac
     return TokenResponse(
         access_token=access_token,
         token_type="Bearer",
         expires_in=settings.JWT_EXPIRY_HOURS * 3600,
-<<<<<<< HEAD
         user=UserBasicInfo(
             id=user.id,
             email=user.email,
             name=user.name,
             profile_picture=user.profile_picture
         )
-=======
->>>>>>> 09fec55ab4658b42257e6db6376aa6c6353809ac
     )
