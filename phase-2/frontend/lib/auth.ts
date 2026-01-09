@@ -197,3 +197,4 @@ export async function loginUser(email: string, password: string): Promise<LoginR
 
   return data;
 }
+
