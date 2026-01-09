@@ -189,7 +189,7 @@ export default function DashboardPage() {
 
             {!loading && !error && (
               <>
-                <TaskList tasks={filteredTasks} onTaskClick={handleTaskClick} onTaskUpdate={refreshData} />
+                <TaskList tasks={filteredTasks} onTaskUpdate={refreshData} />
 
                 {completedTasks > 0 && (
                   <div className="flex justify-end mt-6">

@@ -94,8 +94,7 @@ async def login(
         )
 
     access_token = create_access_token(
-        user_id=user.id,
-        email=user.email,
+        data={"sub": str(user.id), "email": user.email}
     )
 
     from app.schemas.auth import UserBasicInfo

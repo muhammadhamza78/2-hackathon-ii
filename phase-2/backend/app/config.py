@@ -69,7 +69,6 @@ class Settings(BaseSettings):
     DEBUG: bool = True
 
     # CORS Configuration
-<<<<<<< HEAD
     CORS_ORIGINS: str  # Comma-separated list of allowed origins
 
     # Cloud Storage Configuration (AWS S3 or Cloudflare R2)
@@ -79,9 +78,6 @@ class Settings(BaseSettings):
     S3_SECRET_ACCESS_KEY: str | None = None
     S3_ENDPOINT_URL: str | None = None  # Required for Cloudflare R2, optional for AWS S3
     S3_PUBLIC_URL: str | None = None  # Public CDN URL for serving images
-=======
-    CORS_ORIGINS: str = "https://2-hackathon-ii.vercel.app,https://2-hackathon-ii-git-main.vercel.app"
->>>>>>> 09fec55ab4658b42257e6db6376aa6c6353809ac
 
     class Config:
         env_file = ".env"

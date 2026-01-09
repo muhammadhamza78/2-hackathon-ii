@@ -90,12 +90,12 @@ export function TaskCard({ task, onTaskUpdate }: TaskCardProps) {
           className="flex-shrink-0 relative"
         >
           <div
-            className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all ${
+            className={`w-7 h-7 rounded-full border-[3px] flex items-center justify-center transition-all ${
               isCompleted
                 ? "bg-[#e08b3d] border-[#e08b3d]"
-                : "hover:border-[#e08b3d]"
+                : "border-gray-400 hover:border-[#e08b3d]"
             } ${isUpdating ? "opacity-50" : ""}`}
-            style={{ borderColor: isCompleted ? '#e08b3d' : 'var(--card-border)' }}
+            style={{ borderColor: isCompleted ? '#e08b3d' : undefined }}
           >
             {isCompleted && (
               <svg
