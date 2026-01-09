@@ -63,7 +63,7 @@ export function isAuthenticated(): boolean {
 
 export function getAuthHeader(): Record<string, string> {
   const token = getAccessToken();
-  if (token) return { Authorization: Bearer  };
+  if (token) return { Authorization: `Bearer ${token}` };
   return {};
 }
 
@@ -75,3 +75,4 @@ export const auth = {
   isAuthenticated,
   getAuthHeader,
 };
+
