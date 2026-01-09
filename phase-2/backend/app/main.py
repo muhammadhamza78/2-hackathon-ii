@@ -27,7 +27,9 @@ default_origins = [
     "http://127.0.0.1:3000",
     "http://localhost:3001",
     "http://127.0.0.1:3001",
+    "https://2-hackathon-ii.vercel.app",  # ADD THIS
 ]
+
 
 # Merge with environment variable origins
 env_origins = settings.cors_origins_list() if hasattr(settings, 'cors_origins_list') else []
